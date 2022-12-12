@@ -42,11 +42,28 @@ def index():
     
     # extract data needed for visuals
     # TODO: Below is an example - modify to extract data for your own visuals
-    genre_counts = df.groupby('genre').count()['message']
-    genre_names = list(genre_counts.index)
     
+    # Data for graph 1
+    genre_names = ['direct', 'social', 'news']
+    
+    df_genre_and_cats = df.iloc[:, 3:]
+    df_genre_and_cats['sum'] = df_genre_and_cats.sum(axis=1)
+    df_genre_and_cats = df_genre_and_cats[['genre', 'sum']]
+
+    count = []
+    for genre in genre_names:
+        df_aux = df_genre_and_cats[df_genre_and_cats['genre'] == genre]
+        count.append(df_aux[df_aux['sum'] != 0].shape[0])
+        count.append(df_aux[df_aux['sum'] == 0].shape[0])
+    
+    df_table = pd.DataFrame({'Genre': ['direct', 'direct', 'social', 'social', 'news', 'news'],
+                             'Categorized': ['yes', 'no', 'yes', 'no', 'yes', 'no'],
+                             'Count': count}).sort_values(by="Categorized", ascending=False) 
+    
+    # Data for graph 2
     categories_counts = Y.sum().sort_values(ascending=False)
     categories_names = categories_counts.keys()
+    
     
     # create visuals
     # TODO: Below is an example - modify to create your own visuals
@@ -54,13 +71,20 @@ def index():
         {
             'data': [
                 Bar(
-                    x=genre_names,
-                    y=genre_counts
+                    name = "Categorized",
+                    x = df_table['Genre'],
+                    y = df_table['Count'].iloc[:3]
+                ),
+                Bar(
+                    name = "Non categorized",
+                    x = df_table['Genre'],
+                    y = df_table['Count'].iloc[3:]
                 )
             ],
 
             'layout': {
                 'title': 'Distribution of Message Genres',
+                'barmode': 'stack',
                 'yaxis': {
                     'title': "Count"
                 },
